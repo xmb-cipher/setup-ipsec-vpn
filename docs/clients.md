@@ -21,7 +21,8 @@ An alternative <a href="https://usefulpcguide.com/17318/create-your-own-vpn/" ta
   * [Windows Error 809](#windows-error-809)
   * [Windows Error 628](#windows-error-628)
   * [Android 6 and 7](#android-6-and-7)
-  * [Other Errors](#other-errors)
+  * [Other errors](#other-errors)
+  * [Additional steps](#additional-steps)
 
 ## Windows
 
@@ -385,9 +386,17 @@ If you are unable to connect using Android 6 (Marshmallow) or 7 (Nougat):
 
 ![Android VPN workaround](images/vpn-profile-Android.png)
 
-### Other Errors
+### Other errors
 
-First, you may try restarting services on the VPN server:
+For additional information, refer to the links below:
+
+* https://documentation.meraki.com/MX-Z/Client_VPN/Troubleshooting_Client_VPN#Common_Connection_Issues   
+* https://blogs.technet.microsoft.com/rrasblog/2009/08/12/troubleshooting-common-vpn-related-errors/   
+* http://www.tp-link.com/en/faq-1029.html
+
+### Additional steps
+
+First, restart services on the VPN server and retry the connection:
 ```
 service ipsec restart
 service xl2tpd restart
@@ -395,11 +404,24 @@ service xl2tpd restart
 
 If using Docker, run `docker restart ipsec-vpn-server`.
 
-For additional troubleshooting tips, refer to the links below:
+Check the Libreswan (IPsec) log for errors:
+```bash
+# Ubuntu & Debian
+grep pluto /var/log/auth.log
+# CentOS & RHEL
+grep pluto /var/log/secure
+```
 
-https://documentation.meraki.com/MX-Z/Client_VPN/Troubleshooting_Client_VPN#Common_Connection_Issues   
-https://blogs.technet.microsoft.com/rrasblog/2009/08/12/troubleshooting-common-vpn-related-errors/   
-http://www.tp-link.com/en/faq-1029.html
+Check status of the IPsec VPN server:
+```
+ipsec status
+ipsec verify
+```
+
+Show current established VPN connections:
+```
+ipsec whack --trafficstatus
+```
 
 ## Credits
 

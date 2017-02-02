@@ -22,6 +22,7 @@
   * [Windows 错误 628](#windows-错误-628)
   * [Android 6 and 7](#android-6-and-7)
   * [其它错误](#其它错误)
+  * [额外的步骤](#额外的步骤)
 
 ## Windows
 
@@ -388,7 +389,15 @@ strongswan down myvpn
 
 ### 其它错误
 
-首先，你可以尝试重启 VPN 服务器上的相关服务：
+更多的相关信息请参见以下链接：
+
+* https://documentation.meraki.com/MX-Z/Client_VPN/Troubleshooting_Client_VPN#Common_Connection_Issues   
+* https://blogs.technet.microsoft.com/rrasblog/2009/08/12/troubleshooting-common-vpn-related-errors/   
+* http://www.tp-link.com/en/faq-1029.html
+
+### 额外的步骤
+
+首先，重启 VPN 服务器上的相关服务，并重试连接：
 ```
 service ipsec restart
 service xl2tpd restart
@@ -396,11 +405,24 @@ service xl2tpd restart
 
 如果你使用 Docker，请运行 `docker restart ipsec-vpn-server`。
 
-更多的故障排除信息请参见以下链接：
+检查 Libreswan (IPsec) 日志是否有错误：
+```bash
+# Ubuntu & Debian
+grep pluto /var/log/auth.log
+# CentOS & RHEL
+grep pluto /var/log/secure
+```
 
-https://documentation.meraki.com/MX-Z/Client_VPN/Troubleshooting_Client_VPN#Common_Connection_Issues   
-https://blogs.technet.microsoft.com/rrasblog/2009/08/12/troubleshooting-common-vpn-related-errors/   
-http://www.tp-link.com/en/faq-1029.html
+查看 IPsec VPN 服务器状态：
+```
+ipsec status
+ipsec verify
+```
+
+显示当前已建立的 VPN 连接：
+```
+ipsec whack --trafficstatus
+```
 
 ## 致谢
 

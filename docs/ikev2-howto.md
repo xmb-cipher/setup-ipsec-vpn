@@ -1,4 +1,4 @@
-﻿# How-To: IKEv2 VPN for Windows 7 and newer
+﻿# How-To: IKEv2 VPN for Windows and Android
 
 *Read this in other languages: [English](ikev2-howto.md), [简体中文](ikev2-howto-zh.md).*
 
@@ -15,7 +15,7 @@ Libreswan can authenticate IKEv2 clients on the basis of X.509 Machine Certifica
 - Windows 7, 8.x and 10
 - Windows Phone 8.1 and above
 - strongSwan Android VPN client
-- <a href="https://github.com/gaomd/docker-ikev2-vpn-server" target="_blank">iOS (iPhone/iPad) and OS X (macOS)</a> <-- See link
+- <a href="https://github.com/gaomd/docker-ikev2-vpn-server" target="_blank">iOS (iPhone/iPad) and macOS</a> <-- See also
 
 The following example shows how to configure IKEv2 with Libreswan. Commands below must be run as `root`.
 
@@ -63,14 +63,22 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
    EOF
    ```
 
-   We need to add one more line to that file, based on your Libreswan version. Please run command:
+   We need to add one more line to that file. First check your Libreswan version:
 
    ```bash
-   $ if /usr/local/sbin/ipsec --version | grep -qs -F "3.19"; then
-       echo " encapsulation=yes" >> /etc/ipsec.conf
-     else
-       echo " forceencaps=yes" >> /etc/ipsec.conf
-     fi
+   $ ipsec --version
+   ```
+
+   For Libreswan 3.19 and newer, run command:
+
+   ```bash
+   $ echo " encapsulation=yes" >> /etc/ipsec.conf
+   ```
+
+   For Libreswan 3.18 and older, run command:
+
+   ```bash
+   $ echo " forceencaps=yes" >> /etc/ipsec.conf
    ```
 
 1. Generate Certificate Authority (CA) and VPN server certificates:   
@@ -100,7 +108,8 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
    Is this a critical extension [y/N]?
    N
 
-   $ certutil -S -c "Example CA" -n "$PUBLIC_IP" -s "O=Example,CN=$PUBLIC_IP" -k rsa -g 4096 -v 36 -d sql:/etc/ipsec.d -t ",," -1 -6 -8 "$PUBLIC_IP"
+   $ certutil -S -c "Example CA" -n "$PUBLIC_IP" -s "O=Example,CN=$PUBLIC_IP" -k rsa -g 4096 -v 36 -d sql:/etc/ipsec.d -t ",," \
+      --keyUsage digitalSignature,keyEncipherment --extKeyUsage serverAuth --extSAN "ip:$PUBLIC_IP,dns:$PUBLIC_IP"
 
    A random seed must be generated that will be used in the
    creation of your key.  One of the easiest ways to create a
@@ -116,64 +125,13 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
    Finished.  Press enter to continue:
 
    Generating key.  This may take a few moments...
-
-                   0 - Digital Signature
-                   1 - Non-repudiation
-                   2 - Key encipherment
-                   3 - Data encipherment
-                   4 - Key agreement
-                   5 - Cert signing key
-                   6 - CRL signing key
-                   Other to finish
-    > 0
-                   0 - Digital Signature
-                   1 - Non-repudiation
-                   2 - Key encipherment
-                   3 - Data encipherment
-                   4 - Key agreement
-                   5 - Cert signing key
-                   6 - CRL signing key
-                   Other to finish
-    > 2
-                   0 - Digital Signature
-                   1 - Non-repudiation
-                   2 - Key encipherment
-                   3 - Data encipherment
-                   4 - Key agreement
-                   5 - Cert signing key
-                   6 - CRL signing key
-                   Other to finish
-    > 8
-   Is this a critical extension [y/N]?
-   N
-                   0 - Server Auth
-                   1 - Client Auth
-                   2 - Code Signing
-                   3 - Email Protection
-                   4 - Timestamp
-                   5 - OCSP Responder
-                   6 - Step-up
-                   7 - Microsoft Trust List Signing
-                   Other to finish
-    > 0
-                   0 - Server Auth
-                   1 - Client Auth
-                   2 - Code Signing
-                   3 - Email Protection
-                   4 - Timestamp
-                   5 - OCSP Responder
-                   6 - Step-up
-                   7 - Microsoft Trust List Signing
-                   Other to finish
-    > 8
-   Is this a critical extension [y/N]?
-   N
    ```
 
 1. Generate client certificate(s), and export the `.p12` file that contains the client certificate, private key, and CA certificate:
 
    ```bash
-   $ certutil -S -c "Example CA" -n "vpnclient" -s "O=Example,CN=vpnclient" -k rsa -g 4096 -v 36 -d sql:/etc/ipsec.d -t ",," -1 -6 -8 "vpnclient"
+   $ certutil -S -c "Example CA" -n "vpnclient" -s "O=Example,CN=vpnclient" -k rsa -g 4096 -v 36 -d sql:/etc/ipsec.d -t ",," \
+      --keyUsage digitalSignature,keyEncipherment --extKeyUsage serverAuth,clientAuth -8 "vpnclient"
 
    A random seed must be generated that will be used in the
    creation of your key.  One of the easiest ways to create a
@@ -189,68 +147,6 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
    Finished.  Press enter to continue:
 
    Generating key.  This may take a few moments...
-
-                   0 - Digital Signature
-                   1 - Non-repudiation
-                   2 - Key encipherment
-                   3 - Data encipherment
-                   4 - Key agreement
-                   5 - Cert signing key
-                   6 - CRL signing key
-                   Other to finish
-    > 0
-                   0 - Digital Signature
-                   1 - Non-repudiation
-                   2 - Key encipherment
-                   3 - Data encipherment
-                   4 - Key agreement
-                   5 - Cert signing key
-                   6 - CRL signing key
-                   Other to finish
-    > 2
-                   0 - Digital Signature
-                   1 - Non-repudiation
-                   2 - Key encipherment
-                   3 - Data encipherment
-                   4 - Key agreement
-                   5 - Cert signing key
-                   6 - CRL signing key
-                   Other to finish
-    > 8
-   Is this a critical extension [y/N]?
-   N
-                   0 - Server Auth
-                   1 - Client Auth
-                   2 - Code Signing
-                   3 - Email Protection
-                   4 - Timestamp
-                   5 - OCSP Responder
-                   6 - Step-up
-                   7 - Microsoft Trust List Signing
-                   Other to finish
-    > 0
-                   0 - Server Auth
-                   1 - Client Auth
-                   2 - Code Signing
-                   3 - Email Protection
-                   4 - Timestamp
-                   5 - OCSP Responder
-                   6 - Step-up
-                   7 - Microsoft Trust List Signing
-                   Other to finish
-    > 1
-                   0 - Server Auth
-                   1 - Client Auth
-                   2 - Code Signing
-                   3 - Email Protection
-                   4 - Timestamp
-                   5 - OCSP Responder
-                   6 - Step-up
-                   7 - Microsoft Trust List Signing
-                   Other to finish
-    > 8
-   Is this a critical extension [y/N]?
-   N
 
    $ pk12util -o vpnclient.p12 -n "vpnclient" -d sql:/etc/ipsec.d
 
@@ -259,7 +155,7 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
    pk12util: PKCS12 EXPORT SUCCESSFUL
    ```
 
-   Repeat this step for additional VPN clients, but replace every `vpnclient` with `vpnclient2`, etc.
+   Repeat this step for additional VPN clients, but replace every `vpnclient` with `vpnclient2`, etc. Please note: If you wish to connect multiple VPN clients simultaneously, you must generate a unique certificate for each.
 
 1. The database should now contain:
 
@@ -274,7 +170,7 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
    vpnclient                                          u,u,u
    ```
 
-   Note: To delete a certificate, use `certutil -D -d sql:/etc/ipsec.d -n "Certificate Nickname"`.
+   Note: To display a certificate, use `certutil -L -d sql:/etc/ipsec.d -n "Nickname"`. To delete it, replace `-L` with `-D`. For other `certutil` usage, read <a href="http://manpages.ubuntu.com/manpages/zesty/man1/certutil.1.html" target="_blank">this page</a>.
 
 1. Restart IPsec service:
 
@@ -307,7 +203,13 @@ Before continuing, make sure you have successfully <a href="https://github.com/h
 
    #### Android 4.x and newer
 
-   Please refer to: https://wiki.strongswan.org/projects/strongswan/wiki/AndroidVpnClient
+   1. Install the **strongSwan VPN Client** from **Google Play**.
+   2. Launch the VPN client and tap **Add VPN Profile**.
+   3. Enter `Your VPN Server IP` in the **Server** field.
+   4. Select **IKEv2 Certificate** from the **VPN Type** drop-down menu.
+   5. Tap to add a **User certificate**, then tap **Install**.
+   6. Choose the `.p12` file you copied from the VPN server, and follow the prompts.
+   7. Save the new VPN connection, then tap to connect.
 
    Once successfully connected, you can verify that your traffic is being routed properly by <a href="https://encrypted.google.com/search?q=my+ip" target="_blank">looking up your IP address on Google</a>. It should say "Your public IP address is `Your VPN Server IP`".
 
@@ -321,3 +223,4 @@ The built-in VPN client in Windows 7 and newer does not support IKEv2 fragmentat
 * https://libreswan.org/wiki/HOWTO:_Using_NSS_with_libreswan
 * https://libreswan.org/man/ipsec.conf.5.html
 * https://wiki.strongswan.org/projects/strongswan/wiki/Windows7
+* https://wiki.strongswan.org/projects/strongswan/wiki/AndroidVpnClient
